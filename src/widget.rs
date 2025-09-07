@@ -117,12 +117,11 @@ where
     }
 
     fn tag(&self) -> tree::Tag {
-        struct ColorPicker;
-        tree::Tag::of::<ColorPicker>()
+        tree::Tag::of::<State<Renderer>>()
     }
 
     fn state(&self) -> tree::State {
-        tree::State::Some(Box::new(State::<Renderer>::default()))
+        tree::State::new(State::<Renderer>::default())
     }
 
     fn layout(
