@@ -11,3 +11,14 @@ cargo run -p example
 ![demo](demo.png)
 
 
+# Flavours
+
+## Saturation and Value
+![](hue_saturation.png)
+
+
+## Vertical Hue
+![](vertical_hue.png)
+
+## Horizontal Hue
+![](horizontal_hue.png)
