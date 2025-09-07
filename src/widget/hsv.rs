@@ -72,3 +72,49 @@ impl From<Color> for Hsv {
         Self { h, s, v, a }
     }
 }
+
+impl Hsv {
+    pub fn from_rgba8(rgba: impl Into<[u8; 4]>) -> Self {
+        let [r, b, g, a] = rgba.into();
+
+        Self::from(Color::from_rgba8(r, g, b, a as f32 / 255.))
+    }
+
+    pub fn from_rgb8(rgb: impl Into<[u8; 3]>) -> Self {
+        let [r, b, g] = rgb.into();
+
+        Self::from(Color::from_rgb8(r, g, b))
+    }
+
+    pub fn from_rgba(rgba: impl Into<[f32; 4]>) -> Self {
+        Self::from(Color::from(rgba.into()))
+    }
+
+    pub fn from_rgb(rgb: impl Into<[f32; 3]>) -> Self {
+        Self::from(Color::from(rgb.into()))
+    }
+
+    pub fn to_rgba(self) -> [f32; 4] {
+        let Color { r, g, b, a } = Color::from(self);
+        [r, b, g, a]
+    }
+
+    pub fn to_rgb(self) -> [f32; 3] {
+        let Color { r, g, b, .. } = Color::from(self);
+        [r, b, g]
+    }
+
+    pub fn to_rgba8(self) -> [u8; 4] {
+        let Color { r, g, b, a } = Color::from(self);
+        [to_u8(r), to_u8(g), to_u8(b), to_u8(a)]
+    }
+
+    pub fn to_rgb8(self) -> [u8; 3] {
+        let Color { r, g, b, .. } = Color::from(self);
+        [to_u8(r), to_u8(g), to_u8(b)]
+    }
+}
+
+fn to_u8(v: f32) -> u8 {
+    (v * u8::MAX as f32) as u8
+}
