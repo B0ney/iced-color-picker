@@ -1,0 +1,28 @@
+[package]
+name = "iced_color_picker"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+members = ["example"]
+
+[workspace.dependencies]
+iced_color_picker = { path = "." }
+iced = { version = "0.14.0-dev", default-features = false }
+
+
+[dependencies]
+iced_core = { version = "0.14.0-dev" }
+iced_graphics = { version = "0.14.0-dev", features = ["geometry"] }
+
+
+[patch.crates-io]
+iced.git = "https://github.com/iced-rs/iced.git"
+iced_core.git = "https://github.com/iced-rs/iced.git"
+iced_graphics.git = "https://github.com/iced-rs/iced.git"
+iced_widget.git = "https://github.com/iced-rs/iced.git"
+
+
+# TODO
+[profile.dev.package."*"]
+opt-level = 1

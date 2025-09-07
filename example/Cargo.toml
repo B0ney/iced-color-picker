@@ -1,0 +1,12 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iced_color_picker.workspace = true
+
+
+[dependencies.iced]
+workspace = true
+features = ["wgpu", "canvas", "auto-detect-theme", "thread-pool", "debug"]
