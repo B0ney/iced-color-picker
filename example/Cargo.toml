@@ -9,4 +9,4 @@ iced_color_picker.workspace = true
 
 [dependencies.iced]
 workspace = true
-features = ["wgpu", "canvas", "auto-detect-theme", "thread-pool", "debug"]
+features = ["wgpu", "canvas", "thread-pool", "debug", "hot"]
