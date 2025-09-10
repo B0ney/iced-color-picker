@@ -116,5 +116,5 @@ impl Hsv {
 }
 
 fn to_u8(v: f32) -> u8 {
-    (v * u8::MAX as f32) as u8
+    (v * u8::MAX as f32).round() as u8
 }
