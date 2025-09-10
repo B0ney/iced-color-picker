@@ -75,13 +75,13 @@ impl From<Color> for Hsv {
 
 impl Hsv {
     pub fn from_rgba8(rgba: [u8; 4]) -> Self {
-        let [r, b, g, a] = rgba.into();
+        let [r, g, b, a] = rgba;
 
         Self::from(Color::from_rgba8(r, g, b, a as f32 / 255.))
     }
 
     pub fn from_rgb8(rgb: [u8; 3]) -> Self {
-        let [r, b, g] = rgb;
+        let [r, g, b] = rgb;
 
         Self::from(Color::from_rgb8(r, g, b))
     }
@@ -96,12 +96,12 @@ impl Hsv {
 
     pub fn to_rgba(self) -> [f32; 4] {
         let Color { r, g, b, a } = Color::from(self);
-        [r, b, g, a]
+        [r, g, b, a]
     }
 
     pub fn to_rgb(self) -> [f32; 3] {
         let Color { r, g, b, .. } = Color::from(self);
-        [r, b, g]
+        [r, g, b]
     }
 
     pub fn to_rgba8(self) -> [u8; 4] {
