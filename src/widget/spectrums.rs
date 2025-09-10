@@ -5,7 +5,7 @@ use super::hsv;
 use iced_core::{Color, Point, Size};
 use iced_graphics::geometry::{self, Frame};
 
-pub fn saturation_value<Renderer: geometry::Renderer>(frame: &mut Frame<Renderer>, hue: u16) {
+pub fn saturation_value<Renderer: geometry::Renderer>(frame: &mut Frame<Renderer>, hue: f32) {
     use std::num::NonZeroUsize;
 
     // Done for performance. Lower quantum = higher resolution. Hard coded for now.
@@ -47,7 +47,7 @@ pub fn hue_vertical<Renderer: geometry::Renderer>(
         frame.fill_rectangle(
             Point::new(0., row as f32),
             Size::new(width, 1.0),
-            Color::from(hsv(hue as u16, saturation, value)),
+            Color::from(hsv(hue, saturation, value)),
         );
     }
 }
@@ -66,7 +66,7 @@ pub fn hue_horizontal<Renderer: geometry::Renderer>(
         frame.fill_rectangle(
             Point::new(col as f32, 0.),
             Size::new(1.0, height),
-            Color::from(hsv(hue as u16, saturation, value)),
+            Color::from(hsv(hue, saturation, value)),
         );
     }
 }

@@ -351,7 +351,7 @@ fn fetch_hsv(spectrum: Spectrum, current_color: Hsv, bounds: Rectangle, cursor: 
             };
 
             Hsv {
-                h: hue as u16,
+                h: hue,
                 ..current_color
             }
         }

@@ -4,17 +4,17 @@ use iced_core::Color;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Hsv {
-    pub h: u16,
+    pub h: f32,
     pub s: f32,
     pub v: f32,
     pub a: f32,
 }
 
-pub fn hsv(hue: u16, saturation: f32, value: f32) -> Hsv {
+pub fn hsv(hue: f32, saturation: f32, value: f32) -> Hsv {
     hsva(hue, saturation, value, 1.0)
 }
 
-pub fn hsva(hue: u16, saturation: f32, value: f32, alpha: f32) -> Hsv {
+pub fn hsva(hue: f32, saturation: f32, value: f32, alpha: f32) -> Hsv {
     Hsv {
         h: hue,
         s: saturation,
@@ -63,7 +63,7 @@ impl From<Color> for Hsv {
             60.0 * (4.0 + (r - g) / (max - min))
         };
 
-        let h = if h < 0.0 { h + 360.0 } else { h } as u16 % 360;
+        let h = if h < 0.0 { h + 360.0 } else { h } % 360.0;
 
         let s = if max == 0.0 { 0.0 } else { (max - min) / max };
 
