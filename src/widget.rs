@@ -7,7 +7,7 @@ pub mod style;
 pub use hsv::{Hsv, hsv};
 
 use iced_core::widget::{Tree, Widget, tree};
-use iced_core::{Color, Element, Length, Point, Rectangle, Size, Vector, layout, mouse};
+use iced_core::{Color, Element, Length, Point, Rectangle, Size, Vector, layout, mouse, touch};
 use iced_graphics::geometry::{self, Frame, Path};
 
 use style::{Catalog, MarkerShape, Style, StyleFn};
@@ -222,11 +222,49 @@ where
                                     shell.publish(on_select_alt(new_color))
                                 }
                             }
+                            _ => (),
                         };
                     }
                 }
                 _ => (),
             },
+            iced_core::Event::Touch(touch_event) => match touch_event {
+                touch::Event::FingerPressed { id, position } => {
+                    let cursor = *position;
+
+                    if bounds.contains(cursor) && cursor_down.is_none() {
+                        *cursor_down = Some(Pressed::Finger(id.0));
+
+                        shell.publish((self.on_select)(fetch_hsv(
+                            self.spectrum,
+                            *current_color,
+                            bounds,
+                            cursor,
+                        )));
+                    }
+                }
+                touch::Event::FingerMoved { id, position } => {
+                    if let Some(Pressed::Finger(finger_id)) = *cursor_down
+                        && id.0 == finger_id
+                    {
+                        shell.publish((self.on_select)(fetch_hsv(
+                            self.spectrum,
+                            *current_color,
+                            bounds,
+                            *position,
+                        )));
+                    }
+                }
+                touch::Event::FingerLifted { id, .. } => {
+                    if let Some(Pressed::Finger(finger_id)) = *cursor_down
+                        && id.0 == finger_id
+                    {
+                        *cursor_down = None;
+                    }
+                }
+                _ => (),
+            },
+
             _ => (),
         }
     }
@@ -288,6 +326,7 @@ where
 enum Pressed {
     Primary,
     Secondary,
+    Finger(u64),
 }
 
 struct State<Renderer: geometry::Renderer> {
