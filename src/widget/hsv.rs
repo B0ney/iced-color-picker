@@ -2,12 +2,23 @@
 
 use iced_core::Color;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct Hsv {
     pub h: f32,
     pub s: f32,
     pub v: f32,
     pub a: f32,
+}
+
+impl Default for Hsv {
+    fn default() -> Self {
+        Self {
+            h: Default::default(),
+            s: Default::default(),
+            v: Default::default(),
+            a: 1.0,
+        }
+    }
 }
 
 pub fn hsv(hue: f32, saturation: f32, value: f32) -> Hsv {
