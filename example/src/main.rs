@@ -30,12 +30,12 @@ impl State {
             .height(32);
 
         let vertical_picker = color_picker(self.color, UpdateColor)
-            .spectrum(Spectrum::hue_vertical())
+            .spectrum(Spectrum::HueVertical)
             .width(32)
             .height(250);
 
         let horizontal_picker = color_picker(self.color, UpdateColor)
-            .spectrum(Spectrum::hue_horizontal())
+            .spectrum(Spectrum::HueHorizontal)
             .width(250)
             .height(32);
 

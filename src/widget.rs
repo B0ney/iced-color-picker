@@ -24,29 +24,10 @@ where
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum Orientation {
-    Vertical,
-    Horizontal,
-}
-
-#[derive(Debug, Clone, Copy)]
 pub enum Spectrum {
     SaturationValue,
-    Hue { orientation: Orientation },
-}
-
-impl Spectrum {
-    pub fn hue_vertical() -> Self {
-        Self::Hue {
-            orientation: Orientation::Vertical,
-        }
-    }
-
-    pub fn hue_horizontal() -> Self {
-        Self::Hue {
-            orientation: Orientation::Horizontal,
-        }
-    }
+    HueHorizontal,
+    HueVertical,
 }
 
 pub struct ColorPicker<'a, Message, Theme>
@@ -278,10 +259,8 @@ where
                     Spectrum::SaturationValue => {
                         spectrums::saturation_value(frame, current_color.h)
                     }
-                    Spectrum::Hue { orientation } => match orientation {
-                        Orientation::Vertical => spectrums::hue_vertical(frame, 1.0, 1.0),
-                        Orientation::Horizontal => spectrums::hue_horizontal(frame, 1.0, 1.0),
-                    },
+                    Spectrum::HueVertical => spectrums::hue_vertical(frame, 1.0, 1.0),
+                    Spectrum::HueHorizontal => spectrums::hue_horizontal(frame, 1.0, 1.0),
                 });
 
                 let marker = marker_cache.draw(renderer, size, |frame| {
@@ -392,17 +371,18 @@ fn fetch_hsv(spectrum: Spectrum, current_color: Hsv, bounds: Rectangle, cursor: 
                 ..current_color
             }
         }
-        Spectrum::Hue { orientation } => {
-            let hue = match orientation {
-                Orientation::Vertical => {
-                    let y = cursor.y - bounds.position().y;
-                    (y.max(0.0) / bounds.height).min(1.0) * 360.
-                }
-                Orientation::Horizontal => {
-                    let x = cursor.x - bounds.position().x;
-                    (x.max(0.0) / bounds.width).min(1.0) * 360.
-                }
-            };
+        Spectrum::HueHorizontal => {
+            let x = cursor.x - bounds.position().x;
+            let hue = (x.max(0.0) / bounds.width).min(1.0) * 360.0;
+
+            Hsv {
+                h: hue,
+                ..current_color
+            }
+        }
+        Spectrum::HueVertical => {
+            let y = cursor.y - bounds.position().y;
+            let hue = (y.max(0.0) / bounds.height).min(1.0) * 360.;
 
             Hsv {
                 h: hue,
@@ -415,7 +395,9 @@ fn fetch_hsv(spectrum: Spectrum, current_color: Hsv, bounds: Rectangle, cursor: 
 fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
     let color = match spectrum {
         Spectrum::SaturationValue => Color::from(current_color),
-        Spectrum::Hue { .. } => Color::from(hsv(current_color.h, 1.0, 1.0)),
+        Spectrum::HueHorizontal | Spectrum::HueVertical => {
+            Color::from(hsv(current_color.h, 1.0, 1.0))
+        }
     };
 
     let position = match spectrum {
@@ -423,15 +405,11 @@ fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
             x: current_color.s * bounds.width,
             y: (1.0 - current_color.v) * bounds.height,
         },
-        Spectrum::Hue {
-            orientation: Orientation::Vertical,
-        } => Point {
+        Spectrum::HueVertical => Point {
             x: bounds.width / 2.0,
             y: (current_color.h as f32 / 360.) * bounds.height,
         },
-        Spectrum::Hue {
-            orientation: Orientation::Horizontal,
-        } => Point {
+        Spectrum::HueHorizontal => Point {
             x: (current_color.h as f32 / 360.) * bounds.width,
             y: bounds.height / 2.0,
         },
@@ -477,7 +455,7 @@ where
                 redraw = true;
             }
         }
-        Spectrum::Hue { .. } => {
+        Spectrum::HueVertical | Spectrum::HueHorizontal => {
             if new_color.h != current_color.h {
                 current_color.h = new_color.h;
                 cursor_cache.clear();
