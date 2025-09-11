@@ -58,6 +58,7 @@ where
     width: Length,
     height: Length,
     on_select: Box<dyn Fn(Hsv) -> Message + 'a>,
+    on_select_alt: Option<Box<dyn Fn(Hsv) -> Message + 'a>>,
     spectrum: Spectrum,
     class: Theme::Class<'a>,
 }
@@ -72,6 +73,7 @@ where
             width: Length::Fill,
             height: Length::Fill,
             on_select: Box::new(on_select),
+            on_select_alt: None,
             spectrum: Spectrum::SaturationValue,
             class: Theme::default(),
         }
@@ -89,6 +91,11 @@ where
 
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
+        self
+    }
+
+    pub fn on_select_alt(mut self, on_select_alt: impl Fn(Hsv) -> Message + 'a) -> Self {
+        self.on_select_alt = Some(Box::new(on_select_alt));
         self
     }
 
@@ -181,18 +188,60 @@ where
 
         match event {
             iced_core::Event::Mouse(mouse_event) => match mouse_event {
-                mouse::Event::ButtonReleased(mouse::Button::Left) => *cursor_down = false,
-                mouse::Event::ButtonPressed(mouse::Button::Left) if cursor_in_bounds => {
-                    if let Some(cursor) = cursor.position() {
-                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, cursor);
-                        shell.publish((self.on_select)(new_color));
-                        *cursor_down = true;
+                mouse::Event::ButtonReleased(mouse::Button::Left) => {
+                    if let Some(Pressed::Primary) = cursor_down {
+                        *cursor_down = None
                     }
                 }
-                mouse::Event::CursorMoved { .. } if *cursor_down => {
+                mouse::Event::ButtonReleased(mouse::Button::Right) => {
+                    if let Some(Pressed::Secondary) = cursor_down {
+                        *cursor_down = None
+                    }
+                }
+                mouse::Event::ButtonPressed(mouse::Button::Left)
+                    if cursor_in_bounds && cursor_down.is_none() =>
+                {
                     if let Some(cursor) = cursor.position() {
+                        *cursor_down = Some(Pressed::Primary);
+
+                        shell.publish((self.on_select)(fetch_hsv(
+                            self.spectrum,
+                            *current_color,
+                            bounds,
+                            cursor,
+                        )));
+                    }
+                }
+                mouse::Event::ButtonPressed(mouse::Button::Right)
+                    if cursor_in_bounds && cursor_down.is_none() =>
+                {
+                    if let Some(cursor) = cursor.position()
+                        && let Some(on_select_alt) = &self.on_select_alt
+                    {
+                        *cursor_down = Some(Pressed::Secondary);
+
+                        shell.publish((on_select_alt)(fetch_hsv(
+                            self.spectrum,
+                            *current_color,
+                            bounds,
+                            cursor,
+                        )));
+                    }
+                }
+                mouse::Event::CursorMoved { .. } => {
+                    if let Some(cursor) = cursor.position()
+                        && let Some(cursor_down) = cursor_down
+                    {
                         let new_color = fetch_hsv(self.spectrum, *current_color, bounds, cursor);
-                        shell.publish((self.on_select)(new_color));
+
+                        match cursor_down {
+                            Pressed::Primary => shell.publish((self.on_select)(new_color)),
+                            Pressed::Secondary => {
+                                if let Some(on_select_alt) = &self.on_select_alt {
+                                    shell.publish(on_select_alt(new_color))
+                                }
+                            }
+                        };
                     }
                 }
                 _ => (),
@@ -257,10 +306,15 @@ where
     }
 }
 
+enum Pressed {
+    Primary,
+    Secondary,
+}
+
 struct State<Renderer: geometry::Renderer> {
     spectrum_cache: geometry::Cache<Renderer>,
     marker_cache: geometry::Cache<Renderer>,
-    cursor_down: bool,
+    cursor_down: Option<Pressed>,
     current_color: Hsv,
 }
 
