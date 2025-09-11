@@ -43,7 +43,7 @@ impl From<Hsv> for Color {
             _ => (hsv.v, t, p),
         };
 
-        Self::from_rgb(red, green, blue)
+        Self::from_rgba(red, green, blue, hsv.a)
     }
 }
 
