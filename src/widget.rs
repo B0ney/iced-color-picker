@@ -149,7 +149,7 @@ where
     ) {
         let State {
             spectrum_cache,
-            cursor_down,
+            pressed,
             current_color,
             marker_cache,
         }: &mut State<Renderer> = tree.state.downcast_mut();
@@ -169,49 +169,34 @@ where
 
         match event {
             iced_core::Event::Mouse(mouse_event) => match mouse_event {
-                mouse::Event::ButtonReleased(mouse::Button::Left) => {
-                    if let Some(Pressed::Primary) = cursor_down {
-                        *cursor_down = None
-                    }
-                }
-                mouse::Event::ButtonReleased(mouse::Button::Right) => {
-                    if let Some(Pressed::Secondary) = cursor_down {
-                        *cursor_down = None
-                    }
-                }
-                mouse::Event::ButtonPressed(mouse::Button::Left)
-                    if cursor_in_bounds && cursor_down.is_none() =>
+                mouse::Event::ButtonReleased(mouse_button) => match (mouse_button, *pressed) {
+                    (mouse::Button::Left, Some(Pressed::Primary)) => *pressed = None,
+                    (mouse::Button::Right, Some(Pressed::Secondary)) => *pressed = None,
+                    _ => (),
+                },
+                mouse::Event::ButtonPressed(mouse_button)
+                    if cursor_in_bounds && pressed.is_none() =>
                 {
-                    if let Some(cursor) = cursor.position() {
-                        *cursor_down = Some(Pressed::Primary);
+                    let Some(cursor) = cursor.position() else {
+                        return;
+                    };
 
-                        shell.publish((self.on_select)(fetch_hsv(
-                            self.spectrum,
-                            *current_color,
-                            bounds,
-                            cursor,
-                        )));
-                    }
-                }
-                mouse::Event::ButtonPressed(mouse::Button::Right)
-                    if cursor_in_bounds && cursor_down.is_none() =>
-                {
-                    if let Some(cursor) = cursor.position()
-                        && let Some(on_select_alt) = &self.on_select_alt
-                    {
-                        *cursor_down = Some(Pressed::Secondary);
+                    let (new_pressed, on_select) = match mouse_button {
+                        mouse::Button::Left => (Pressed::Primary, Some(self.on_select.as_ref())),
+                        mouse::Button::Right => (Pressed::Secondary, self.on_select_alt.as_deref()),
+                        _ => return,
+                    };
 
-                        shell.publish((on_select_alt)(fetch_hsv(
-                            self.spectrum,
-                            *current_color,
-                            bounds,
-                            cursor,
-                        )));
+                    if let Some(on_select) = on_select {
+                        *pressed = Some(new_pressed);
+
+                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, cursor);
+                        shell.publish((on_select)(new_color))
                     }
                 }
                 mouse::Event::CursorMoved { .. } => {
                     if let Some(cursor) = cursor.position()
-                        && let Some(cursor_down) = cursor_down
+                        && let Some(cursor_down) = pressed
                     {
                         let new_color = fetch_hsv(self.spectrum, *current_color, bounds, cursor);
 
@@ -230,36 +215,26 @@ where
             },
             iced_core::Event::Touch(touch_event) => match touch_event {
                 touch::Event::FingerPressed { id, position } => {
-                    let cursor = *position;
+                    if bounds.contains(*position) && pressed.is_none() {
+                        *pressed = Some(Pressed::Finger(id.0));
 
-                    if bounds.contains(cursor) && cursor_down.is_none() {
-                        *cursor_down = Some(Pressed::Finger(id.0));
-
-                        shell.publish((self.on_select)(fetch_hsv(
-                            self.spectrum,
-                            *current_color,
-                            bounds,
-                            cursor,
-                        )));
+                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, *position);
+                        shell.publish((self.on_select)(new_color));
                     }
                 }
                 touch::Event::FingerMoved { id, position } => {
-                    if let Some(Pressed::Finger(finger_id)) = *cursor_down
+                    if let Some(Pressed::Finger(finger_id)) = *pressed
                         && id.0 == finger_id
                     {
-                        shell.publish((self.on_select)(fetch_hsv(
-                            self.spectrum,
-                            *current_color,
-                            bounds,
-                            *position,
-                        )));
+                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, *position);
+                        shell.publish((self.on_select)(new_color));
                     }
                 }
                 touch::Event::FingerLifted { id, .. } => {
-                    if let Some(Pressed::Finger(finger_id)) = *cursor_down
+                    if let Some(Pressed::Finger(finger_id)) = *pressed
                         && id.0 == finger_id
                     {
-                        *cursor_down = None;
+                        *pressed = None;
                     }
                 }
                 _ => (),
@@ -323,6 +298,7 @@ where
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 enum Pressed {
     Primary,
     Secondary,
@@ -332,7 +308,7 @@ enum Pressed {
 struct State<Renderer: geometry::Renderer> {
     spectrum_cache: geometry::Cache<Renderer>,
     marker_cache: geometry::Cache<Renderer>,
-    cursor_down: Option<Pressed>,
+    pressed: Option<Pressed>,
     current_color: Hsv,
 }
 
@@ -341,7 +317,7 @@ impl<Renderer: geometry::Renderer> Default for State<Renderer> {
         Self {
             spectrum_cache: Default::default(),
             marker_cache: Default::default(),
-            cursor_down: Default::default(),
+            pressed: Default::default(),
             current_color: Default::default(),
         }
     }
