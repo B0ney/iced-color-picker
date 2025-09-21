@@ -54,7 +54,12 @@ impl From<Hsv> for Color {
             _ => (hsv.v, t, p),
         };
 
-        Self::from_rgba(red, green, blue, hsv.a)
+        Self::from_rgba(
+            red.clamp(0.0, 1.0),
+            green.clamp(0.0, 1.0),
+            blue.clamp(0.0, 1.0),
+            hsv.a.clamp(0.0, 1.0),
+        )
     }
 }
 
