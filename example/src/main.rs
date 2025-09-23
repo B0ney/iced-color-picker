@@ -21,7 +21,7 @@ impl State {
     }
 
     pub fn view(&self) -> Element<'_, UpdateColor> {
-        let preview = container(Space::with_width(Length::Shrink))
+        let preview = container(Space::new().width(Length::Shrink))
             .style(|_| container::Style {
                 background: Some(Color::from(self.color).into()),
                 ..Default::default()
