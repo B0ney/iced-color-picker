@@ -1,19 +1,23 @@
 [package]
 name = "iced_color_picker"
-version = "0.1.0"
+version = "0.15.0"
 edition = "2024"
+authors = ["B0ney"]
+description = "A simple and composable color picker widget for iced"
+license = "MIT"
+repository = "https://github.com/B0ney/iced-color-picker"
 
 [workspace]
 members = ["example"]
 
 [workspace.dependencies]
 iced_color_picker = { path = "." }
-iced = { version = "0.14.0-dev", default-features = false }
+iced = { version = "0.15.0-dev", default-features = false, features=["x11", "wayland"] }
 
 
 [dependencies]
-iced_core = { version = "0.14.0-dev" }
-iced_graphics = { version = "0.14.0-dev", features = ["geometry"] }
+iced_core = { version = "0.15.0-dev" }
+iced_graphics = { version = "0.15.0-dev", features = ["geometry"] }
 
 
 [patch.crates-io]
