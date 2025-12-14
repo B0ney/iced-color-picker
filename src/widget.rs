@@ -12,15 +12,16 @@ use iced_graphics::geometry::{self, Frame, Path};
 
 use style::{Catalog, MarkerShape, Style, StyleFn};
 
-pub fn color_picker<'a, Message, Theme>(
+pub fn color_picker<'a, Message, Theme, FromHsv>(
     color: impl Into<Hsv>,
-    on_select: impl Fn(Hsv) -> Message + 'a,
+    on_select: impl Fn(FromHsv) -> Message + 'a,
 ) -> ColorPicker<'a, Message, Theme>
 where
     Message: 'a,
     Theme: Catalog + 'a,
+    FromHsv: From<Hsv> + 'a,
 {
-    ColorPicker::new(color, on_select)
+    ColorPicker::new(color, move |color| on_select(color.into()))
 }
 
 #[derive(Debug, Clone, Copy)]
