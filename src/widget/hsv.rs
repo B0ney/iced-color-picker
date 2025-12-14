@@ -37,8 +37,8 @@ pub fn hsva(hue: f32, saturation: f32, value: f32, alpha: f32) -> Hsv {
 impl From<Hsv> for Color {
     fn from(hsv: Hsv) -> Self {
         // https://en.wikipedia.org/wiki/HSL_and_HSV#Color_conversion_formulae
-        let h = (f32::from(hsv.h) / 60.0).floor();
-        let f = (f32::from(hsv.h) / 60.0) - h;
+        let h = (hsv.h / 60.0).floor();
+        let f = (hsv.h / 60.0) - h;
 
         let p = hsv.v * (1.0 - hsv.s);
         let q = hsv.v * (1.0 - hsv.s * f);

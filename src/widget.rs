@@ -423,10 +423,10 @@ fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
         },
         Spectrum::HueVertical => Point {
             x: bounds.width / 2.0,
-            y: (current_color.h as f32 / 360.) * bounds.height,
+            y: (current_color.h / 360.) * bounds.height,
         },
         Spectrum::HueHorizontal => Point {
-            x: (current_color.h as f32 / 360.) * bounds.width,
+            x: (current_color.h / 360.) * bounds.width,
             y: bounds.height / 2.0,
         },
     };
