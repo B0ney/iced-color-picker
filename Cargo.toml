@@ -1,6 +1,6 @@
 [package]
 name = "iced_color_picker"
-version = "0.15.0"
+version = "0.14.0"
 edition = "2024"
 authors = ["B0ney"]
 description = "A simple and composable color picker widget for iced"
@@ -12,19 +12,12 @@ members = ["example"]
 
 [workspace.dependencies]
 iced_color_picker = { path = "." }
-iced = { version = "0.15.0-dev", default-features = false, features=["x11", "wayland"] }
+iced = { version = "0.14.0", default-features = false, features=["x11", "wayland"] }
 
 
 [dependencies]
-iced_core = { version = "0.15.0-dev" }
-iced_graphics = { version = "0.15.0-dev", features = ["geometry"] }
-
-
-[patch.crates-io]
-iced.git = "https://github.com/iced-rs/iced.git"
-iced_core.git = "https://github.com/iced-rs/iced.git"
-iced_graphics.git = "https://github.com/iced-rs/iced.git"
-iced_widget.git = "https://github.com/iced-rs/iced.git"
+iced_core = { version = "0.14.0" }
+iced_graphics = { version = "0.14.0", features = ["geometry"] }
 
 
 # TODO

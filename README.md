@@ -1,6 +1,6 @@
 # Iced Color Picker
 
-A simple, composable color picker widget for [iced](https://iced.rs). Master branch only.
+A simple, composable color picker widget for [iced](https://iced.rs).
 
 ## Demo
 
