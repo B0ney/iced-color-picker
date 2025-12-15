@@ -1,4 +1,4 @@
-//! Widget to display and pick colors.
+//! A widget to display and pick colors.
 
 pub mod hsv;
 pub mod spectrums;
@@ -12,6 +12,7 @@ use iced_graphics::geometry::{self, Frame, Path};
 
 use style::{Catalog, MarkerShape, Style, StyleFn};
 
+/// Creates a new [ColorPicker] with the current [Hsv] (or [Color]) value, and a closure to produce a message when a color is picked.
 pub fn color_picker<'a, Message, Theme, FromHsv>(
     color: impl Into<Hsv>,
     on_select: impl Fn(FromHsv) -> Message + 'a,
@@ -24,13 +25,19 @@ where
     ColorPicker::new(color, move |color| on_select(color.into()))
 }
 
+/// The range of colors displayed by the [ColorPicker].
 #[derive(Debug, Clone, Copy)]
 pub enum Spectrum {
+    /// A 2-Dimensional spectrum where the saturation changes along the x-axis,
+    /// and the value changes along the y-axis.
     SaturationValue,
+    /// A 1-Dimensional spectrum where the hue changes along the x-axis.
     HueHorizontal,
+    /// A 1-Dimensional spectrum where the hue changes along the y-axis.
     HueVertical,
 }
 
+/// A widget that can be used to select colors.
 pub struct ColorPicker<'a, Message, Theme>
 where
     Message: 'a,
@@ -61,26 +68,31 @@ where
         }
     }
 
+    /// Change the type of [Spectrum] displayed by the [ColorPicker].
     pub fn spectrum(mut self, spectrum: Spectrum) -> Self {
         self.spectrum = spectrum;
         self
     }
 
+    /// Set the width of the [ColorPicker].
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
         self
     }
 
+    /// Set the height of the [ColorPicker].
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
         self
     }
 
+    /// Set function that will be called when a color is picked with the right mouse button.
     pub fn on_select_alt(mut self, on_select_alt: impl Fn(Hsv) -> Message + 'a) -> Self {
         self.on_select_alt = Some(Box::new(on_select_alt));
         self
     }
 
+    /// Set the [Style] of the [ColorPicker].
     pub fn style(mut self, style: impl Fn(&Theme) -> Style + 'a) -> Self
     where
         Theme::Class<'a>: From<StyleFn<'a, Theme>>,
@@ -89,6 +101,7 @@ where
         self
     }
 
+    /// Set the style class of the [ColorPicker].
     pub fn class(mut self, class: Theme::Class<'a>) -> Self {
         self.class = class;
         self

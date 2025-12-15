@@ -2,11 +2,16 @@
 
 use iced_core::Color;
 
+/// Hue, Saturation, Value (Brightness)
 #[derive(Debug, Clone, Copy)]
 pub struct Hsv {
+    /// The Hue component.
     pub h: f32,
+    /// The Saturation component.
     pub s: f32,
+    /// The Value component.
     pub v: f32,
+    /// The alpha component.
     pub a: f32,
 }
 
