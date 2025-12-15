@@ -87,8 +87,11 @@ where
     }
 
     /// Set function that will be called when a color is picked with the right mouse button.
-    pub fn on_select_alt(mut self, on_select_alt: impl Fn(Hsv) -> Message + 'a) -> Self {
-        self.on_select_alt = Some(Box::new(on_select_alt));
+    pub fn on_select_alt<FromHsv: From<Hsv>>(
+        mut self,
+        on_select_alt: impl Fn(FromHsv) -> Message + 'a,
+    ) -> Self {
+        self.on_select_alt = Some(Box::new(move |color| on_select_alt(color.into())));
         self
     }
 
