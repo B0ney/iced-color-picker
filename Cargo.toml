@@ -12,12 +12,12 @@ members = ["example"]
 
 [workspace.dependencies]
 iced_color_picker = { path = "." }
-iced = { version = "0.14.0", default-features = false, features=["x11", "wayland"] }
+iced = { version = "0.14", default-features = false, features=["x11", "wayland"] }
 
 
 [dependencies]
-iced_core = { version = "0.14.0" }
-iced_graphics = { version = "0.14.0", features = ["geometry"] }
+iced_core = { version = "0.14" }
+iced_graphics = { version = "0.14", features = ["geometry"] }
 
 
 # TODO
