@@ -27,6 +27,7 @@ where
 
 /// The range of colors displayed by the [ColorPicker].
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub enum Spectrum {
     /// A 2-Dimensional spectrum where the saturation changes along the x-axis,
     /// and the value changes along the y-axis.
