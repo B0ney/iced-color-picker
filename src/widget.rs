@@ -5,9 +5,10 @@ pub mod spectrums;
 pub mod style;
 
 pub use hsv::{Hsv, hsv};
+pub use spectrums::{HsvComponent, Spectrum};
 
 use iced_core::widget::{Tree, Widget, tree};
-use iced_core::{Color, Element, Length, Point, Rectangle, Size, Vector, layout, mouse, touch};
+use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse, touch};
 use iced_graphics::geometry::{self, Frame, Path};
 
 use style::{Catalog, MarkerShape, Style, StyleFn};
@@ -23,18 +24,6 @@ where
     FromHsv: From<Hsv> + 'a,
 {
     ColorPicker::new(color, move |color| on_select(color.into()))
-}
-
-/// The range of colors displayed by the [ColorPicker].
-#[derive(Debug, Clone, Copy)]
-pub enum Spectrum {
-    /// A 2-Dimensional spectrum where the saturation changes along the x-axis,
-    /// and the value changes along the y-axis.
-    SaturationValue,
-    /// A 1-Dimensional spectrum where the hue changes along the x-axis.
-    HueHorizontal,
-    /// A 1-Dimensional spectrum where the hue changes along the y-axis.
-    HueVertical,
 }
 
 /// A widget that can be used to select colors.
@@ -63,7 +52,7 @@ where
             height: Length::Fill,
             on_select: Box::new(on_select),
             on_select_alt: None,
-            spectrum: Spectrum::SaturationValue,
+            spectrum: Spectrum::default(),
             class: Theme::default(),
         }
     }
@@ -206,7 +195,7 @@ where
                     if let Some(on_select) = on_select {
                         *pressed = Some(new_pressed);
 
-                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, cursor);
+                        let new_color = self.spectrum.fetch_hsv(*current_color, bounds, cursor);
                         shell.publish((on_select)(new_color))
                     }
                 }
@@ -214,7 +203,7 @@ where
                     if let Some(cursor) = cursor.position()
                         && let Some(cursor_down) = pressed
                     {
-                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, cursor);
+                        let new_color = self.spectrum.fetch_hsv(*current_color, bounds, cursor);
 
                         match cursor_down {
                             Pressed::Primary => shell.publish((self.on_select)(new_color)),
@@ -234,7 +223,7 @@ where
                     if bounds.contains(*position) && pressed.is_none() {
                         *pressed = Some(Pressed::Finger(id.0));
 
-                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, *position);
+                        let new_color = self.spectrum.fetch_hsv(*current_color, bounds, *position);
                         shell.publish((self.on_select)(new_color));
                     }
                 }
@@ -242,7 +231,7 @@ where
                     if let Some(Pressed::Finger(finger_id)) = *pressed
                         && id.0 == finger_id
                     {
-                        let new_color = fetch_hsv(self.spectrum, *current_color, bounds, *position);
+                        let new_color = self.spectrum.fetch_hsv(*current_color, bounds, *position);
                         shell.publish((self.on_select)(new_color));
                     }
                 }
@@ -284,12 +273,8 @@ where
 
         renderer.with_layer(bounds, |renderer| {
             renderer.with_translation(bounds.position() - Point::ORIGIN, |renderer| {
-                let spectrum = spectrum_cache.draw(renderer, size, |frame| match self.spectrum {
-                    Spectrum::SaturationValue => {
-                        spectrums::saturation_value(frame, current_color.h)
-                    }
-                    Spectrum::HueVertical => spectrums::hue_vertical(frame, 1.0, 1.0),
-                    Spectrum::HueHorizontal => spectrums::hue_horizontal(frame, 1.0, 1.0),
+                let spectrum = spectrum_cache.draw(renderer, size, |frame| {
+                    self.spectrum.render_spectrum(frame, current_color)
                 });
 
                 let marker = marker_cache.draw(renderer, size, |frame| {
@@ -388,63 +373,12 @@ impl Marker {
     }
 }
 
-fn fetch_hsv(spectrum: Spectrum, current_color: Hsv, bounds: Rectangle, cursor: Point) -> Hsv {
-    match spectrum {
-        Spectrum::SaturationValue => {
-            let Vector { x, y } = cursor - bounds.position();
-
-            let sat = (x.max(0.0) / bounds.width).min(1.0);
-            let val = 1.0 - (y.max(0.0) / bounds.height).min(1.0);
-
-            Hsv {
-                s: sat,
-                v: val,
-                ..current_color
-            }
-        }
-        Spectrum::HueHorizontal => {
-            let x = cursor.x - bounds.position().x;
-            let hue = (x.max(0.0) / bounds.width).min(1.0) * 360.0;
-
-            Hsv {
-                h: hue,
-                ..current_color
-            }
-        }
-        Spectrum::HueVertical => {
-            let y = cursor.y - bounds.position().y;
-            let hue = (y.max(0.0) / bounds.height).min(1.0) * 360.;
-
-            Hsv {
-                h: hue,
-                ..current_color
-            }
-        }
-    }
-}
-
+/// Provide the visual for the location marker on a Spectrum
 fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
-    let color = match spectrum {
-        Spectrum::SaturationValue => Color::from(current_color),
-        Spectrum::HueHorizontal | Spectrum::HueVertical => {
-            Color::from(hsv(current_color.h, 1.0, 1.0))
-        }
-    };
+    // Used to determine if the marker should be black or white for good visibility
+    let color = Color::from(current_color);
 
-    let position = match spectrum {
-        Spectrum::SaturationValue => Point {
-            x: current_color.s * bounds.width,
-            y: (1.0 - current_color.v) * bounds.height,
-        },
-        Spectrum::HueVertical => Point {
-            x: bounds.width / 2.0,
-            y: (current_color.h / 360.) * bounds.height,
-        },
-        Spectrum::HueHorizontal => Point {
-            x: (current_color.h / 360.) * bounds.width,
-            y: bounds.height / 2.0,
-        },
-    };
+    let position = spectrum.get_marker_pos(current_color, bounds);
 
     let outline = match color.relative_luminance() > 0.5 {
         true => Color::BLACK,
@@ -458,6 +392,7 @@ fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
     }
 }
 
+/// Determines if the colour changed for a specific spectrum
 fn diff<Renderer>(
     spectrum: Spectrum,
     canvas_cache: &geometry::Cache<Renderer>,
@@ -468,36 +403,12 @@ fn diff<Renderer>(
 where
     Renderer: geometry::Renderer,
 {
-    let mut redraw = false;
+    let redraw = spectrum.requires_redraw(current_color, &new_color);
 
-    match spectrum {
-        Spectrum::SaturationValue => {
-            if new_color.h != current_color.h {
-                current_color.h = new_color.h;
-                canvas_cache.clear();
-                cursor_cache.clear();
-                redraw = true;
-            }
-
-            if new_color.s != current_color.s || new_color.v != current_color.v {
-                current_color.s = new_color.s;
-                current_color.v = new_color.v;
-                cursor_cache.clear();
-                redraw = true;
-            }
-        }
-        Spectrum::HueVertical | Spectrum::HueHorizontal => {
-            if new_color.h != current_color.h {
-                current_color.h = new_color.h;
-                cursor_cache.clear();
-                redraw = true;
-            }
-
-            if new_color.s != current_color.s || new_color.v != current_color.v {
-                current_color.s = new_color.s;
-                current_color.v = new_color.v;
-            }
-        }
+    if new_color != *current_color {
+        *current_color = new_color;
+        canvas_cache.clear();
+        cursor_cache.clear();
     }
 
     redraw

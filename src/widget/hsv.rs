@@ -3,7 +3,7 @@
 use iced_core::Color;
 
 /// Hue, Saturation, Value (Brightness)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Hsv {
     /// The Hue component.
     pub h: f32,
