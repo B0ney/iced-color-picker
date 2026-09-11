@@ -4,8 +4,8 @@ pub mod hsv;
 pub mod spectrums;
 pub mod style;
 
-pub use hsv::{Hsv, hsv};
-pub use spectrums::{HsvComponent, Spectrum};
+pub use hsv::{Component, Hsv, hsv};
+pub use spectrums::Spectrum;
 
 use iced_core::widget::{Tree, Widget, tree};
 use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse, touch};
@@ -266,7 +266,10 @@ where
             ..
         }: &State<Renderer> = tree.state.downcast_ref();
 
-        let Style { marker_shape } = theme.style(&self.class);
+        let Style {
+            marker_shape,
+            preserve_hue,
+        } = theme.style(&self.class);
 
         let bounds = layout.bounds();
         let size = layout.bounds().size();
@@ -274,11 +277,12 @@ where
         renderer.with_layer(bounds, |renderer| {
             renderer.with_translation(bounds.position() - Point::ORIGIN, |renderer| {
                 let spectrum = spectrum_cache.draw(renderer, size, |frame| {
-                    self.spectrum.render_spectrum(frame, current_color)
+                    self.spectrum.draw(frame, current_color)
                 });
 
                 let marker = marker_cache.draw(renderer, size, |frame| {
-                    marker(self.spectrum, *current_color, size).draw(frame, marker_shape);
+                    marker(self.spectrum, *current_color, size, preserve_hue)
+                        .draw(frame, marker_shape);
                 });
 
                 renderer.draw_geometry(spectrum);
@@ -373,12 +377,12 @@ impl Marker {
     }
 }
 
-/// Provide the visual for the location marker on a Spectrum
-fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
-    // Used to determine if the marker should be black or white for good visibility
-    let color = Color::from(current_color);
-
-    let position = spectrum.get_marker_pos(current_color, bounds);
+fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size, preserve_hue: bool) -> Marker {
+    let color = Color::from(match preserve_hue {
+        true => spectrum.preserve_hue(current_color),
+        false => current_color,
+    });
+    let position = spectrum.get_marker_position(current_color, bounds);
 
     let outline = match color.relative_luminance() > 0.5 {
         true => Color::BLACK,
@@ -392,7 +396,6 @@ fn marker(spectrum: Spectrum, current_color: Hsv, bounds: Size) -> Marker {
     }
 }
 
-/// Determines if the colour changed for a specific spectrum
 fn diff<Renderer>(
     spectrum: Spectrum,
     canvas_cache: &geometry::Cache<Renderer>,
@@ -403,7 +406,7 @@ fn diff<Renderer>(
 where
     Renderer: geometry::Renderer,
 {
-    let redraw = spectrum.requires_redraw(current_color, &new_color);
+    let redraw = spectrum.requires_redraw(*current_color, new_color);
 
     if new_color != *current_color {
         *current_color = new_color;

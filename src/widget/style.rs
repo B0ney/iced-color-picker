@@ -8,6 +8,9 @@ pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme) -> Style + 'a>;
 
 pub struct Style {
     pub marker_shape: MarkerShape,
+    /// Preserve the hue by forcing the saturation and value to 1.
+    /// Only works on 1-Dimensional spectrums with the Hue as its component.
+    pub preserve_hue: bool,
 }
 
 pub trait Catalog {
@@ -36,5 +39,6 @@ pub fn normal(_: &iced_core::Theme) -> Style {
             size: 8.,
             border_width: 2.,
         },
+        preserve_hue: true,
     }
 }
