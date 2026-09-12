@@ -2,8 +2,8 @@
 
 use iced_core::Color;
 
-/// Hue, Saturation, Value (Brightness)
-#[derive(Debug, Clone, Copy)]
+/// Hue, Saturation, Value
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Hsv {
     /// The Hue component.
     pub h: f32,
@@ -138,4 +138,63 @@ impl Hsv {
 
 fn to_u8(v: f32) -> u8 {
     (v * u8::MAX as f32).round() as u8
+}
+
+/// Hue, Saturation, Value
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Component {
+    Hue,
+    Saturation,
+    Value,
+}
+
+impl Component {
+    /// Fetch a hsv component.
+    pub fn get(&self, hsv: Hsv) -> f32 {
+        match self {
+            Component::Hue => hsv.h,
+            Component::Saturation => hsv.s,
+            Component::Value => hsv.v,
+        }
+    }
+
+    /// Create a new [Hsv] by updating one of its components with a given percentage.
+    pub fn update_percentage(&self, hsv: Hsv, percentage: f32) -> Hsv {
+        match self {
+            Component::Hue => Hsv {
+                h: percentage * 360.0,
+                ..hsv
+            },
+            Component::Saturation => Hsv {
+                s: percentage,
+                ..hsv
+            },
+            Component::Value => Hsv {
+                v: 1.0 - percentage,
+                ..hsv
+            },
+        }
+    }
+
+    /// Get the percentage of one of the [Hsv]'s components.
+    pub fn get_percentage(&self, hsv: Hsv) -> f32 {
+        match self {
+            Component::Hue => hsv.h / 360.0,
+            Component::Saturation => hsv.s,
+            Component::Value => 1.0 - hsv.v,
+        }
+    }
+
+    /// Preserve the visual appearance of the hue component
+    /// by making the satuation and value 1.
+    pub fn preserve_hue(&self, hsv: Hsv) -> Hsv {
+        match self {
+            Component::Hue => Hsv {
+                s: 1.0,
+                v: 1.0,
+                ..hsv
+            },
+            _ => hsv,
+        }
+    }
 }

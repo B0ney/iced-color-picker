@@ -1,7 +1,7 @@
 use iced::widget::{Space, center, column, container, row};
 use iced::{Color, Element, Length};
 
-use iced_color_picker::{Hsv, Spectrum, color_picker};
+use iced_color_picker::{Component, Hsv, Spectrum, color_picker};
 
 fn main() -> iced::Result {
     iced::run(State::update, State::view)
@@ -29,13 +29,23 @@ impl State {
             .width(250)
             .height(32);
 
-        let vertical_picker = color_picker(self.color, UpdateColor)
-            .spectrum(Spectrum::HueVertical)
+        let vertical_hue_picker = color_picker(self.color, UpdateColor)
+            .spectrum(Spectrum::vertical(Component::Hue))
             .width(32)
             .height(250);
 
-        let horizontal_picker = color_picker(self.color, UpdateColor)
-            .spectrum(Spectrum::HueHorizontal)
+        let vertical_picker_sat = color_picker(self.color, UpdateColor)
+            .spectrum(Spectrum::vertical(Component::Saturation))
+            .width(32)
+            .height(250);
+
+        let vertical_picker_val = color_picker(self.color, UpdateColor)
+            .spectrum(Spectrum::vertical(Component::Value))
+            .width(32)
+            .height(250);
+
+        let horizontal_hue_picker = color_picker(self.color, UpdateColor)
+            .spectrum(Spectrum::horizontal(Component::Hue))
             .width(250)
             .height(32);
 
@@ -43,11 +53,16 @@ impl State {
             column![
                 preview,
                 row![
-                    color_picker(self.color, UpdateColor).width(250).height(250),
-                    vertical_picker
+                    color_picker(self.color, UpdateColor)
+                        .spectrum(Spectrum::matrix(Component::Saturation, Component::Value))
+                        .width(250)
+                        .height(250),
+                    vertical_hue_picker,
+                    vertical_picker_sat,
+                    vertical_picker_val,
                 ]
                 .spacing(4),
-                horizontal_picker
+                horizontal_hue_picker
             ]
             .spacing(4),
         )
