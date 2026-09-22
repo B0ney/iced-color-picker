@@ -7,8 +7,8 @@ pub mod style;
 pub use hsv::{Component, Hsv, hsv};
 pub use spectrums::Spectrum;
 
-use iced_core::widget::{Tree, Widget, tree};
-use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse, touch};
+use iced_core::widget::{Meta, Tree, Widget, tree};
+use iced_core::{Color, Length, Point, Rectangle, Size, layout, mouse, touch};
 use iced_graphics::geometry::{self, Frame, Path};
 
 use style::{Catalog, MarkerShape, Style, StyleFn};
@@ -118,19 +118,14 @@ where
         tree::State::new(State::<Renderer>::default())
     }
 
-    fn layout(
-        &mut self,
-        _tree: &mut Tree,
-        _renderer: &Renderer,
-        limits: &layout::Limits,
-    ) -> layout::Node {
-        layout::atomic(limits, self.width, self.height)
+    fn layout(&mut self, tree: &mut Tree, _renderer: &Renderer, limits: &layout::Limits) {
+        tree.size = layout::atomic(limits, self.width, self.height)
     }
 
     fn mouse_interaction(
         &self,
         _state: &Tree,
-        layout: layout::Layout<'_>,
+        layout: layout::Layout,
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
         _renderer: &Renderer,
@@ -146,7 +141,7 @@ where
         &mut self,
         tree: &mut Tree,
         event: &iced_core::Event,
-        layout: layout::Layout<'_>,
+        layout: layout::Layout,
         cursor: mouse::Cursor,
         _renderer: &Renderer,
         shell: &mut iced_core::Shell<'_, Message>,
@@ -255,7 +250,7 @@ where
         renderer: &mut Renderer,
         theme: &Theme,
         _style: &iced_core::renderer::Style,
-        layout: iced_core::Layout<'_>,
+        layout: iced_core::Layout,
         _cursor: mouse::Cursor,
         _viewport: &iced_core::Rectangle,
     ) {
@@ -292,16 +287,7 @@ where
     }
 }
 
-impl<'a, Message, Theme, Renderer> From<ColorPicker<'a, Message, Theme>>
-    for Element<'a, Message, Theme, Renderer>
-where
-    Theme: Catalog + 'a,
-    Renderer: geometry::Renderer + 'static,
-{
-    fn from(value: ColorPicker<'a, Message, Theme>) -> Self {
-        Element::new(value)
-    }
-}
+impl<'a, Message, Theme: Catalog> Meta for ColorPicker<'a, Message, Theme> {}
 
 #[derive(Debug, Clone, Copy)]
 enum Pressed {

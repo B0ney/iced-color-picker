@@ -1,5 +1,5 @@
 use iced::widget::{Space, center, column, container, row};
-use iced::{Color, Element, Length};
+use iced::{Color, Length, Widget};
 
 use iced_color_picker::{Component, Hsv, Spectrum, color_picker};
 
@@ -20,7 +20,7 @@ impl State {
         self.color = new_color.0;
     }
 
-    pub fn view(&self) -> Element<'_, UpdateColor> {
+    pub fn view(&self) -> impl Widget<UpdateColor> {
         let preview = container(Space::new().width(Length::Shrink))
             .style(|_| container::Style {
                 background: Some(Color::from(self.color).into()),
@@ -66,6 +66,5 @@ impl State {
             ]
             .spacing(4),
         )
-        .into()
     }
 }
